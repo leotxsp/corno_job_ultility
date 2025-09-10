@@ -1,18 +1,17 @@
 {
-  "name": "Pdf Auto naming",
+  "name": "Pdf Auto Naming",
   "version": "1.0",
   "description": "Automatically names PDF files based on a DOM tag.",
   "manifest_version": 3,
-  "permissions": ["activeTab", "scripting", "storage", "downloads"],
+  "permissions": ["activeTab", "scripting", "storage", "downloads", "tabs"],
   "background": {
     "service_worker": "background.js"
   },
-
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-    "js": ["content.js"]
-  }
-]
-
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
 }
