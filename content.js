@@ -1,16 +1,22 @@
 function getIdentifier() {
-  let el = document.querySelector('.AppHeader-context-item-label')?.innerText || "download";
-  console.log("Retrieved identifier:", el);
-  return el;
+  return new Promise((resolve) => {
+    // Retrieve saved selector from storage
+    chrome.storage.local.get('selector', (data) => {
+      const selector = data.selector || '.AppHeader-context-item-label'; // Fallback to default
+      let el = document.querySelector(selector)?.innerText || 'download';
+      console.log(`Retrieved identifier using selector "${selector}": ${el}`);
+      resolve(el);
+    });
+  });
 }
 
-function sendIdentifier() {
+async function sendIdentifier() {
   if (chrome.runtime?.id) {
-    let identifier = getIdentifier();
+    let identifier = await getIdentifier();
     chrome.runtime.sendMessage({ identifier });
-    console.log("Sent identifier:", identifier);
+    console.log('Sent identifier:', identifier);
   } else {
-    console.warn("Extension context invalidated, cannot send message.");
+    console.warn('Extension context invalidated, cannot send message.');
   }
 }
 
@@ -18,17 +24,20 @@ function sendIdentifier() {
 sendIdentifier();
 
 // Send identifier on <a> or button clicks
-document.addEventListener('click', e => {
-  if (e.target.tagName === 'A' || e.target.closest('button')) {
+document.addEventListener('click', (e) => {
+  if (e.target.tagName === 'A' || e.target.closest('button') || e.target.closest('[role="button"]')) {
     sendIdentifier();
   }
 });
 
 // Monitor DOM changes for the target element
-const targetNode = document.querySelector('span.x1iyjqo2.x6ikm8r.x10wlt62.x1n2onr6.xlyipyv.xuxw1ft.x1rg5ohu._ao3e')?.parentNode || document.body;
-const observer = new MutationObserver(() => {
-  sendIdentifier();
+chrome.storage.local.get('selector', (data) => {
+  const selector = data.selector || '.AppHeader-context-item-label';
+  const targetNode = document.querySelector(selector)?.parentNode || document.body;
+  const observer = new MutationObserver(() => {
+    sendIdentifier();
+  });
+  observer.observe(targetNode, { childList: true, subtree: true, characterData: true });
 });
-observer.observe(targetNode, { childList: true, subtree: true, characterData: true });
 
-console.log("Content script loaded");
+console.log('Content script loaded');
