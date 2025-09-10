@@ -12,9 +12,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     let clean = message.identifier.replace(/[\\/:*?"<>|]/g, '_').trim();
     if (clean) {
       identifiers[sender.tab.id] = clean;
-      lastIdentifier = clean;
+      lastIdentifier = clean; // Update lastIdentifier only if valid
       chrome.storage.local.set({ identifiers });
-      console.log(`Stored identifier for tab ${sender.tab.id}: ${clean}`);
+      console.log(`Stored identifier for tab ${sender.tab.id}: ${clean} (lastIdentifier: ${lastIdentifier})`);
+    } else {
+      console.warn(`Invalid identifier "${message.identifier}" for tab ${sender.tab.id}, keeping lastIdentifier: ${lastIdentifier}`);
     }
   } else {
     console.warn('Invalid message or tabId:', message, sender);
