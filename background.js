@@ -12,31 +12,42 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     let clean = message.identifier.replace(/[\\/:*?"<>|]/g, '_').trim();
     if (clean) {
       identifiers[sender.tab.id] = clean;
-      lastIdentifier = clean; // Update lastIdentifier only if valid
+      lastIdentifier = clean; 
       chrome.storage.local.set({ identifiers });
       console.log(`Stored identifier for tab ${sender.tab.id}: ${clean} (lastIdentifier: ${lastIdentifier})`);
+
+      // ✅ send tabId back to content.js
+      sendResponse({ identifier: clean, tabId: sender.tab.id });
     } else {
       console.warn(`Invalid identifier "${message.identifier}" for tab ${sender.tab.id}, keeping lastIdentifier: ${lastIdentifier}`);
     }
   } else {
     console.warn('Invalid message or tabId:', message, sender);
   }
+
+  // Needed for async responses
+  return true;
 });
 
 chrome.downloads.onDeterminingFilename.addListener((downloadItem, suggest) => {
   console.log('Download item:', downloadItem);
+
   let tabId = downloadItem.tabId;
-  let id = identifiers[tabId] || lastIdentifier || 'download';
+  let id;
+
+  if (tabId && identifiers[tabId]) {
+    id = identifiers[tabId];
+  } else {
+    id = lastIdentifier || 'download';
+  }
+
   let originalName = downloadItem.filename || '';
-  let ext = originalName.includes('.') ? originalName.substring(originalName.lastIndexOf('.')) : '.pdf';
+  let ext = originalName.includes('.') 
+    ? originalName.substring(originalName.lastIndexOf('.')) 
+    : '.pdf';
 
   let suggestedFilename = id + ext;
-  console.log(`Suggesting filename: ${suggestedFilename} for tabId: ${tabId}`);
+  console.log(`Suggesting filename: ${suggestedFilename} for tabId: ${tabId ?? "N/A"}`);
   suggest({ filename: suggestedFilename });
 });
 
-chrome.tabs.onRemoved.addListener((tabId) => {
-  delete identifiers[tabId];
-  chrome.storage.local.set({ identifiers });
-  console.log(`Cleared identifier for tab ${tabId}`);
-});

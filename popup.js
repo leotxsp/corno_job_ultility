@@ -15,15 +15,17 @@ document.addEventListener('DOMContentLoaded', () => {
   saveButton.addEventListener('click', () => {
     const selector = selectorInput.value.trim();
     if (!selector) {
-      errorDiv.textContent = 'Please enter a valid class or ID selector.';
+      errorDiv.textContent = 'Please enter a valid CSS selector.';
       errorDiv.style.display = 'block';
       statusDiv.style.display = 'none';
       return;
     }
 
-    // Basic validation: ensure it starts with '.' or '#' or is a valid tag
-    if (!/^[.#]?[a-zA-Z0-9\-_]+$/.test(selector)) {
-      errorDiv.textContent = 'Invalid selector. Use a class (e.g., .my-class), ID (e.g., #my-id), or tag name.';
+    // Validate selector using querySelector
+    try {
+      document.querySelector(selector);
+    } catch (e) {
+      errorDiv.textContent = 'Invalid CSS selector syntax.';
       errorDiv.style.display = 'block';
       statusDiv.style.display = 'none';
       return;
@@ -35,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
       errorDiv.style.display = 'none';
       setTimeout(() => {
         statusDiv.style.display = 'none';
-      }, 2000); // Hide status after 2 seconds
+      }, 2000);
     });
   });
 });
